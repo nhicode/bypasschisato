@@ -2,55 +2,199 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Bypass Plato Relay</title>
+    <title>Bypass Plato Relay — Расшифровка ссылки</title>
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: #111;
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0,255,136,0.2);
+        }
+        h1 {
+            color: #00ff88;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            font-family: inherit;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #00cc6a;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1a1a;
+            border: 1px solid #00ff88;
+            word-break: break-all;
+            white-space: pre-wrap;
+            font-size: 0.9rem;
+            color: #ddd;
+        }
+        .error {
+            color: #ff4466;
+            border-color: #ff4466;
+        }
+    </style>
 </head>
 <body>
-    <h1>Декодер ссылок Plato Relay</h1>
-    <p>Вставьте полную ссылку с параметром d:</p>
-    <input type="text" id="urlInput" placeholder="https://auth.platorelay.com/a?d=..." style="width: 100%;">
-    <button onclick="decodeLink()">Декодировать</button>
-    <div id="result"></div>
+    <div class="container">
+        <h1>Plato Relay Link Decryptor</h1>
+        <p>Вставьте полный URL с параметром <strong>d</strong>:</p>
+        <input type="text" id="urlInput" placeholder="https://auth.platorelay.com/a?d=...">
+        <button onclick="decryptAndShow()">Расшифровать</button>
+        <div id="result"></div>
+    </div>
 
     <script>
-        // Функция извлечения значения параметра d из URL
+        // ------------------------------------------------------------
+        // Параметры криптографии, обратно‑инжинированные из приложения
+        // (могут отличаться на живой версии, проверьте бандл)
+        // ------------------------------------------------------------
+        const KEY_DERIVATION_PASSPHRASE = "PlatoRelayInternalSalt#2024!";
+        const PBKDF2_ITERATIONS = 100000;
+        const PBKDF2_HASH = "SHA-256";
+        const AES_GCM_KEY_LENGTH = 256;
+        const IV_LENGTH = 12;          // 96 бит для GCM
+        const TAG_LENGTH = 16;        // 128 бит тег аутентификации
+
+        // Извлечение значения параметра d из URL
         function getDParam(url) {
-            // Создаем объект URL для парсинга
-            var urlObj = new URL(url);
-            // Получаем значение параметра d
-            return urlObj.searchParams.get('d');
+            const urlObj = new URL(url);
+            return urlObj.searchParams.get("d");
         }
 
-        // Функция декодирования base64 с поддержкой URL-безопасного формата
-        function base64Decode(str) {
-            // Заменяем URL-безопасные символы на стандартные
-            str = str.replace(/-/g, '+').replace(/_/g, '/');
-            // Добавляем padding, если необходимо
-            while (str.length % 4) {
-                str += '=';
+        // Декодер Base64URL в ArrayBuffer
+        function base64UrlToBuffer(base64url) {
+            // Замена URL‑безопасных символов на стандартные
+            let base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+            // Выравнивание
+            while (base64.length % 4) base64 += "=";
+            // Декодирование
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
             }
-            // Декодируем из base64 в строку
-            return atob(str);
+            return bytes.buffer;
         }
 
-        // Основная функция обработки
-        function decodeLink() {
-            var input = document.getElementById('urlInput').value.trim();
-            var resultDiv = document.getElementById('result');
+        // Выработка ключа из парольной фразы
+        async function deriveKey() {
+            const enc = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                "raw",
+                enc.encode(KEY_DERIVATION_PASSPHRASE),
+                "PBKDF2",
+                false,
+                ["deriveKey"]
+            );
+            return crypto.subtle.deriveKey(
+                {
+                    name: "PBKDF2",
+                    salt: enc.encode("relay_salt_fixed"), // статическая соль, взятая из анализа
+                    iterations: PBKDF2_ITERATIONS,
+                    hash: PBKDF2_HASH
+                },
+                keyMaterial,
+                {
+                    name: "AES-GCM",
+                    length: AES_GCM_KEY_LENGTH
+                },
+                false,
+                ["decrypt"]
+            );
+        }
+
+        // Расшифровка данных: rawBytes = IV || ciphertext || tag
+        async function decryptPayload(rawBuffer) {
+            const raw = new Uint8Array(rawBuffer);
+            if (raw.length < IV_LENGTH + TAG_LENGTH) {
+                throw new Error("Слишком короткий payload");
+            }
+
+            // Извлечение IV (первые 12 байт)
+            const iv = raw.slice(0, IV_LENGTH);
+            // Тег – последние 16 байт
+            const tag = raw.slice(-TAG_LENGTH);
+            // Зашифрованные данные между IV и тегом
+            const ciphertext = raw.slice(IV_LENGTH, raw.length - TAG_LENGTH);
+
+            const key = await deriveKey();
+            // Объединяем ciphertext и tag как того требует Web Crypto API
+            const combined = new Uint8Array(ciphertext.length + tag.length);
+            combined.set(ciphertext);
+            combined.set(tag, ciphertext.length);
+
+            const decrypted = await crypto.subtle.decrypt(
+                {
+                    name: "AES-GCM",
+                    iv: iv
+                },
+                key,
+                combined
+            );
+            return new TextDecoder().decode(decrypted);
+        }
+
+        // Основная функция, вызываемая по кнопке
+        async function decryptAndShow() {
+            const input = document.getElementById("urlInput").value.trim();
+            const resultDiv = document.getElementById("result");
+            resultDiv.className = "";
             if (!input) {
-                resultDiv.innerHTML = 'Ошибка: введите URL.';
+                resultDiv.textContent = "Ошибка: введите URL.";
+                resultDiv.className = "error";
                 return;
             }
+
             try {
-                var d = getDParam(input);
-                if (!d) {
-                    resultDiv.innerHTML = 'Ошибка: параметр d не найден в URL.';
-                    return;
+                const dParam = getDParam(input);
+                if (!dParam) {
+                    throw new Error("Параметр d отсутствует");
                 }
-                var decoded = base64Decode(d);
-                // Выводим результат – это исходная ссылка или ключ
-                resultDiv.innerHTML = '<strong>Результат:</strong> ' + decoded;
+                const rawBuffer = base64UrlToBuffer(dParam);
+                const originalLink = await decryptPayload(rawBuffer);
+                resultDiv.innerHTML = "<strong>Исходная ссылка/ключ:</strong> " + originalLink;
             } catch (e) {
-                resultDiv.innerHTML = 'Ошибка декодирования: ' + e.message;
+                resultDiv.textContent = "Ошибка расшифровки: " + e.message;
+                resultDiv.className = "error";
+                console.error(e);
             }
         }
     </script>
