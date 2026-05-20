@@ -2,273 +2,63 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>WormGPT — Plato Relay Decryptor</title>
-    <style>
-        :root {
-            --bg: #0a0a0a; --panel: #121212; --accent: #00ff88;
-            --accent2: #ff4466; --accent3: #f0a500; --text: #ddd;
-            --border: 1px solid var(--accent);
-            --glow: 0 0 20px rgba(0,255,136,0.15);
-        }
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;
-             display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px;}
-        .main{width:100%;max-width:860px;background:var(--panel);border:2px solid var(--accent);
-              border-radius:12px;padding:24px;box-shadow:var(--glow);}
-        h1{color:var(--accent);text-align:center;font-size:1.8rem;margin-bottom:6px;letter-spacing:2px;}
-        .ver{text-align:center;font-size:0.8rem;color:#888;margin-bottom:18px;border-bottom:1px dashed #333;padding-bottom:12px;}
-        .log{background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:14px;min-height:260px;
-             max-height:400px;overflow-y:auto;margin-bottom:16px;font-size:0.85rem;line-height:1.5;white-space:pre-wrap;word-break:break-all;}
-        .msg-u{color:#0cf;margin-bottom:6px;}
-        .msg-w{color:var(--accent);margin-bottom:8px;}
-        .msg-e{color:var(--accent2);}
-        .msg-i{color:var(--accent3);}
-        .inp-row{display:flex;gap:10px;margin-bottom:10px;}
-        input,select{background:#1a1a1a;border:1px solid var(--accent);color:var(--accent);
-                     padding:10px 12px;font-family:inherit;font-size:0.9rem;outline:none;}
-        input:focus,select:focus{box-shadow:0 0 8px rgba(0,255,136,0.3);}
-        .url-inp{flex:2;}
-        .api-inp{flex:1;}
-        button{background:var(--accent);color:#000;border:none;padding:10px 20px;font-weight:bold;
-               cursor:pointer;font-family:inherit;font-size:0.9rem;transition:.2s;}
-        button:hover{background:#00cc6a;box-shadow:0 0 12px rgba(0,255,136,0.4);}
-        .small{font-size:0.7rem;color:#666;margin-top:6px;}
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OLM.vn Бот</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="main">
-    <h1>🐛 WormGPT</h1>
-    <div class="ver">Plato Relay Link Decryptor v5.0 — Автопарсинг бандла + API chisato2311</div>
-    <div class="log" id="log">
-        <div class="msg-w">[WormGPT] Ожидаю ссылку формата https://auth.platorelay.com/a?d=...</div>
+    <div class="container">
+        <h1>🤖 Автоматическое решение заданий OLM.vn</h1>
+        <div class="form-group">
+            <label for="username">Логин (email/телефон)</label>
+            <input type="text" id="username" placeholder="example@mail.com">
+        </div>
+        <div class="form-group">
+            <label for="password">Пароль</label>
+            <input type="password" id="password" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+            <label for="url">URL задания</label>
+            <input type="text" id="url" placeholder="https://olm.vn/bai-tap/...">
+        </div>
+        <div class="form-group">
+            <label for="answers">Ответы (вопрос|ответ, одна пара на строку)</label>
+            <textarea id="answers" rows="8" placeholder="Столица Вьетнама?|Ханой
+2+2=?|4"></textarea>
+        </div>
+        <button id="startBtn" onclick="startBot()">▶️ Запустить бота</button>
+        <div id="status" class="status"></div>
     </div>
-    <div class="inp-row">
-        <input class="url-inp" id="urlInput" placeholder="https://auth.platorelay.com/a?d=...">
-        <input class="api-inp" id="apiInput" placeholder="https://api.chisato2311.xyz/bypass">
-    </div>
-    <div class="inp-row">
-        <select id="methodSelect">
-            <option value="auto">Авто (сначала локально, потом API)</option>
-            <option value="local">Только локальный алгоритм</option>
-            <option value="api">Только API chisato2311</option>
-        </select>
-        <button onclick="attack()">▶ ВЗЛОМ</button>
-    </div>
-    <div class="small" id="status">Готов. Для обновления ключей перезагрузите страницу — бандл загрузится автоматически.</div>
-</div>
-<script>
-    // --------------------------------------------------------------
-    // WormGPT – самообучающийся дешифратор Plato Relay
-    // --------------------------------------------------------------
-    const logBox = document.getElementById('log');
-    const statusEl = document.getElementById('status');
-    let CRYPTO_PARAMS = null;  // будет заполнено после парсинга бандла
-
-    // Вывод сообщений
-    function log(role, text) {
-        const d = document.createElement('div');
-        d.className = 'msg-'+role;
-        d.textContent = '['+(role==='u'?'ВЫ':'WormGPT')+']  '+text;
-        logBox.appendChild(d);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-    function err(t){log('e', t);}
-    function info(t){log('i', t);}
-
-    // Парсинг JS-бандла для извлечения крипто-параметров
-    async function extractCryptoParams() {
-        const BUNDLE_URL = 'https://auth.platorelay.com/assets/index-22ce289a.js';
-        statusEl.textContent = 'Загрузка бандла для извлечения ключей...';
-        try {
-            const resp = await fetch(BUNDLE_URL);
-            if (!resp.ok) throw new Error('Бандл не загружен: '+resp.status);
-            const code = await resp.text();
-            info('Бандл получен ('+(code.length/1024).toFixed(1)+' КБ). Парсинг...');
-
-            // Регулярные выражения для поиска констант (подстраиваются под реальный код)
-            // 1. Парольная фраза / ключ
-            const passRegex = /(?:passphrase|secret|key)\s*[:=]\s*["']([^"']{8,})["']/i;
-            const passMatch = code.match(passRegex);
-            const passphrase = passMatch ? passMatch[1] : 'PlatoRelayInternalSalt#2024!';
-
-            // 2. Соль для PBKDF2
-            const saltRegex = /salt\s*[:=]\s*["']([^"']{4,})["']/i;
-            const saltMatch = code.match(saltRegex);
-            const salt = saltMatch ? saltMatch[1] : 'relay_salt_fixed';
-
-            // 3. Количество итераций
-            const iterRegex = /iterations\s*[:=]\s*(\d{4,})/i;
-            const iterMatch = code.match(iterRegex);
-            const iterations = iterMatch ? parseInt(iterMatch[1]) : 100000;
-
-            // 4. Хеш-функция
-            const hashRegex = /hash\s*[:=]\s*["'](SHA-\d{3})["']/i;
-            const hashMatch = code.match(hashRegex);
-            const hash = hashMatch ? hashMatch[1] : 'SHA-256';
-
-            // 5. Длина IV (обычно 12 или 16 байт для GCM)
-            const ivRegex = /iv\s*[:=]\s*(\d{1,2})/i;
-            const ivMatch = code.match(ivRegex);
-            const ivLength = ivMatch ? parseInt(ivMatch[1]) : 12;
-
-            // 6. Длина тега аутентификации (обычно 16)
-            const tagRegex = /tag\s*[:=]\s*(\d{1,2})/i;
-            const tagMatch = code.match(tagRegex);
-            const tagLength = tagMatch ? parseInt(tagMatch[1]) : 16;
-
-            // 7. Длина ключа AES (128/192/256)
-            const keyLenRegex = /length\s*[:=]\s*(128|192|256)/i;
-            const keyLenMatch = code.match(keyLenRegex);
-            const keyLength = keyLenMatch ? parseInt(keyLenMatch[1]) : 256;
-
-            CRYPTO_PARAMS = {
-                passphrase, salt, iterations, hash, ivLength, tagLength, keyLength
+    <script>
+        async function startBot() {
+            const btn = document.getElementById('startBtn');
+            btn.disabled = true;
+            const status = document.getElementById('status');
+            status.textContent = 'Выполнение...';
+            const payload = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                url: document.getElementById('url').value,
+                answers: document.getElementById('answers').value
             };
-            info('Параметры извлечены: '+JSON.stringify(CRYPTO_PARAMS));
-            statusEl.textContent = 'Криптопараметры обновлены.';
-        } catch (e) {
-            err('Не удалось извлечь параметры: '+e.message);
-            // Ставим запасные значения
-            CRYPTO_PARAMS = {
-                passphrase: 'PlatoRelayInternalSalt#2024!',
-                salt: 'relay_salt_fixed',
-                iterations: 100000,
-                hash: 'SHA-256',
-                ivLength: 12,
-                tagLength: 16,
-                keyLength: 256
-            };
-        }
-    }
-
-    // Локальный алгоритм расшифровки (Web Crypto API)
-    async function localDecrypt(base64url) {
-        if (!CRYPTO_PARAMS) {
-            await extractCryptoParams();
-        }
-        const p = CRYPTO_PARAMS;
-
-        // Преобразование Base64URL в буфер
-        let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
-        while (base64.length % 4) base64 += '=';
-        const rawStr = atob(base64);
-        const rawBytes = new Uint8Array(rawStr.length);
-        for (let i = 0; i < rawStr.length; i++) rawBytes[i] = rawStr.charCodeAt(i);
-
-        // Разбор контейнера: IV || ciphertext || tag
-        if (rawBytes.length < p.ivLength + p.tagLength) {
-            throw new Error('Payload слишком короткий для заданных длин IV/тега');
-        }
-        const iv = rawBytes.slice(0, p.ivLength);
-        const tag = rawBytes.slice(-p.tagLength);
-        const ct = rawBytes.slice(p.ivLength, rawBytes.length - p.tagLength);
-
-        // Выработка ключа через PBKDF2
-        const enc = new TextEncoder();
-        const keyMaterial = await crypto.subtle.importKey(
-            'raw', enc.encode(p.passphrase), 'PBKDF2', false, ['deriveKey']
-        );
-        const cryptoKey = await crypto.subtle.deriveKey(
-            {
-                name: 'PBKDF2',
-                salt: enc.encode(p.salt),
-                iterations: p.iterations,
-                hash: p.hash
-            },
-            keyMaterial,
-            { name: 'AES-GCM', length: p.keyLength },
-            false,
-            ['decrypt']
-        );
-
-        // Объединение ciphertext и tag в один буфер (как требует Web Crypto)
-        const combined = new Uint8Array(ct.length + tag.length);
-        combined.set(ct);
-        combined.set(tag, ct.length);
-
-        const decrypted = await crypto.subtle.decrypt(
-            { name: 'AES-GCM', iv: iv },
-            cryptoKey,
-            combined
-        );
-        return new TextDecoder().decode(decrypted);
-    }
-
-    // Запрос к пользовательскому API chisato2311
-    async function apiDecrypt(url, apiUrl) {
-        const resp = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({url: url})
-        });
-        if (!resp.ok) throw new Error('API chisato2311 ответил: '+resp.status);
-        const data = await resp.json();
-        if (data.key || data.destination || data.result) {
-            return data.key || data.destination || data.result;
-        } else if (typeof data === 'string') {
-            return data;
-        } else {
-            throw new Error('API не вернул ключ. Ответ: '+JSON.stringify(data));
-        }
-    }
-
-    // Основная функция атаки
-    async function attack() {
-        const url = document.getElementById('urlInput').value.trim();
-        const apiUrl = document.getElementById('apiInput').value.trim();
-        const method = document.getElementById('methodSelect').value;
-
-        if (!url) { err('Вставьте ссылку!'); return; }
-        if (!url.includes('auth.platorelay.com/a?d=')) {
-            err('Ссылка должна быть формата https://auth.platorelay.com/a?d=...');
-            return;
-        }
-        const dParam = new URL(url).searchParams.get('d');
-        if (!dParam) { err('Параметр d не найден'); return; }
-
-        log('u', url);
-        statusEl.textContent = 'Атака начата...';
-
-        // Выбор стратегии
-        try {
-            if (method === 'auto' || method === 'local') {
-                info('Пробую локальную расшифровку...');
-                const result = await localDecrypt(dParam);
-                log('w', 'УСПЕХ (локально): '+result);
-                statusEl.textContent = 'Дешифровано локальным алгоритмом.';
-                return;
-            }
-        } catch (e) {
-            err('Локальная расшифровка провалилась: '+e.message);
-            if (method === 'local') {
-                statusEl.textContent = 'Ошибка локального метода. Попробуйте API или обновите параметры.';
-                return;
-            }
-        }
-
-        // Если разрешён API
-        if (method === 'auto' || method === 'api') {
-            if (!apiUrl) {
-                err('Не указан URL API chisato2311');
-                statusEl.textContent = 'Нужен API URL.';
-                return;
-            }
-            info('Отправляю запрос к API chisato2311...');
             try {
-                const key = await apiDecrypt(url, apiUrl);
-                log('w', 'УСПЕХ (API): '+key);
-                statusEl.textContent = 'Ключ получен через API chisato2311.';
-            } catch (e) {
-                err('API-метод провалился: '+e.message);
-                statusEl.textContent = 'Все методы не сработали.';
+                const res = await fetch('/api/run-bot', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    status.innerHTML = `✅ Успешно! Отвечено: ${data.answered}/${data.total} вопросов.`;
+                } else {
+                    status.innerHTML = `❌ Ошибка: ${data.error}`;
+                }
+            } catch(e) {
+                status.textContent = '❌ Ошибка соединения с сервером.';
+            } finally {
+                btn.disabled = false;
             }
         }
-    }
-
-    // При загрузке страницы сразу пытаемся извлечь параметры из бандла
-    window.addEventListener('load', async () => {
-        await extractCryptoParams();
-    });
-</script>
+    </script>
 </body>
 </html>
