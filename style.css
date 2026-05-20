@@ -1,0 +1,77 @@
+/* Стили для панели управления ботом OLM.vn */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+.container {
+    background: #1e293b;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    width: 100%;
+    max-width: 500px;
+}
+h1 {
+    margin: 0 0 1.5rem;
+    font-size: 1.5rem;
+    text-align: center;
+    color: #60a5fa;
+}
+.form-group {
+    margin-bottom: 1rem;
+}
+label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #94a3b8;
+}
+input, textarea {
+    width: 100%;
+    padding: 0.7rem;
+    border: 1px solid #334155;
+    border-radius: 0.5rem;
+    background: #0f172a;
+    color: #f1f5f9;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+button {
+    width: 100%;
+    padding: 0.8rem;
+    background: #2563eb;
+    border: none;
+    border-radius: 0.5rem;
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+button:hover {
+    background: #1d4ed8;
+}
+button:disabled {
+    background: #4b5563;
+    cursor: not-allowed;
+}
+.status {
+    margin-top: 1rem;
+    padding: 0.7rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+    background: #1e293b;
+    word-break: break-word;
+}
