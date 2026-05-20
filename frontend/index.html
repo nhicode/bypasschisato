@@ -2,14 +2,56 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>OLM Auto Tool</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="app"></div>
-    <script src="src/auth.js"></script>
-    <script src="components/login.js"></script>
-    <script src="index.js"></script>
+    <div class="container">
+        <div class="card">
+            <h2>🤖 OLM Auto Tool</h2>
+            <p id="statusMsg">Đang kết nối...</p>
+        </div>
+        <div id="loginPanel" class="card">
+            <h3>🔐 Đăng nhập OLM</h3>
+            <input type="text" id="username" placeholder="Tên đăng nhập / Email" autocomplete="username">
+            <input type="password" id="password" placeholder="Mật khẩu" autocomplete="current-password" style="margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; margin: 15px 0;">
+                <label><input type="checkbox" id="rememberMe"> Ghi nhớ</label>
+                <button id="loginBtn">🚀 Đăng nhập</button>
+            </div>
+            <div id="loginError" class="error"></div>
+        </div>
+        <div id="appPanel" style="display: none;">
+            <div class="card">
+                <div>👤 <span id="userName">—</span> (<span id="userTier">free</span>)</div>
+                <div>📚 BT: <span id="remainUses">0</span> | 📝 KT: <span id="examUses">0</span></div>
+                <button id="logoutBtn" class="secondary">Đăng xuất</button>
+            </div>
+            <div class="card">
+                <h3>⚙️ Cấu hình</h3>
+                <input type="number" id="pages" value="3" min="1" max="30" style="width: 100%; margin-bottom: 10px;">
+                <select id="scanMode" style="width: 100%; margin-bottom: 10px;">
+                    <option value="pending">Chỉ bài chưa làm</option>
+                    <option value="all">Tất cả bài (kể cả đã làm)</option>
+                </select>
+                <button id="scanBtn">🔍 Quét bài tập</button>
+            </div>
+            <div id="progressArea" class="card" style="display: none;">
+                <div id="progressText">Đang xử lý...</div>
+                <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+                <div id="logArea" class="log-area"></div>
+            </div>
+            <div class="card">
+                <h3>📋 Danh sách bài tập</h3>
+                <div id="assignmentList">📭 Nhấn "Quét bài"</div>
+                <div style="margin-top: 16px; display: flex; gap: 10px;">
+                    <button id="solveBtn" disabled>▶ Giải bài đã chọn</button>
+                    <button id="genKeyBtn" class="secondary">✨ Tạo key (FREE)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
