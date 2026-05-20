@@ -1,63 +1,106 @@
+<!-- ==================== Файл: index.html ==================== -->
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OLM.vn Бот</title>
+    <title>OLM Bot — Đăng nhập & Giải tự động</title>
+    <!-- Подключаем внешний CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>🤖 Автоматическое решение заданий OLM.vn</h1>
-        <div class="form-group">
-            <label for="username">Логин (email/телефон)</label>
-            <input type="text" id="username" placeholder="example@mail.com">
+
+    <div class="glass-card">
+        <!-- Заголовок и подзаголовок -->
+        <div class="title">OLM Bot</div>
+        <div class="subtitle">Đăng nhập & tự động giải bài tập</div>
+
+        <!-- Переключатели вкладок -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('login')">Đăng nhập</button>
+            <button class="tab" onclick="switchTab('solver')">Giải bài tập</button>
         </div>
-        <div class="form-group">
-            <label for="password">Пароль</label>
-            <input type="password" id="password" placeholder="••••••••">
+
+        <!-- Вкладка "Đăng nhập" -->
+        <div id="login-section" class="tab-content active">
+            <div class="input-group">
+                <label>Email hoặc số điện thoại</label>
+                <input type="text" id="username" class="input-field" placeholder="example@mail.com">
+            </div>
+            <div class="input-group">
+                <label>Mật khẩu</label>
+                <input type="password" id="password" class="input-field" placeholder="••••••••">
+            </div>
+            <button class="btn-login" onclick="login()">Đăng nhập</button>
+            <div id="login-status" class="status-msg"></div>
         </div>
-        <div class="form-group">
-            <label for="url">URL задания</label>
-            <input type="text" id="url" placeholder="https://olm.vn/bai-tap/...">
+
+        <!-- Вкладка "Giải bài tập" (изначально скрыта) -->
+        <div id="solver-section" class="tab-content">
+            <div class="url-row">
+                <input type="text" id="assignment-url" class="input-field" placeholder="https://olm.vn/bai-tap/...">
+                <button class="btn-paste" onclick="pasteClipboard()">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M19 2H5C3.9 2 3 2.9 3 4v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm7 16H5V4h14v16z"/></svg>
+                    <span>Dán</span>
+                </button>
+            </div>
+            <button id="solve-btn" class="btn-solve" onclick="solve()">Giải bài tập</button>
+            <div id="solve-status" class="status-msg"></div>
         </div>
-        <div class="form-group">
-            <label for="answers">Ответы (вопрос|ответ, одна пара на строку)</label>
-            <textarea id="answers" rows="8" placeholder="Столица Вьетнама?|Ханой
-2+2=?|4"></textarea>
-        </div>
-        <button id="startBtn" onclick="startBot()">▶️ Запустить бота</button>
-        <div id="status" class="status"></div>
     </div>
+
+    <!-- Скрипты для работы интерфейса -->
     <script>
-        async function startBot() {
-            const btn = document.getElementById('startBtn');
-            btn.disabled = true;
-            const status = document.getElementById('status');
-            status.textContent = 'Выполнение...';
-            const payload = {
-                username: document.getElementById('username').value,
-                password: document.getElementById('password').value,
-                url: document.getElementById('url').value,
-                answers: document.getElementById('answers').value
-            };
-            try {
-                const res = await fetch('/api/run-bot', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                if (data.success) {
-                    status.innerHTML = `✅ Успешно! Отвечено: ${data.answered}/${data.total} вопросов.`;
-                } else {
-                    status.innerHTML = `❌ Ошибка: ${data.error}`;
-                }
-            } catch(e) {
-                status.textContent = '❌ Ошибка соединения с сервером.';
-            } finally {
-                btn.disabled = false;
+        // Переключение между вкладками
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+
+            if (tabName === 'login') {
+                document.querySelector('.tab:nth-child(1)').classList.add('active');
+                document.getElementById('login-section').classList.add('active');
+            } else if (tabName === 'solver') {
+                document.querySelector('.tab:nth-child(2)').classList.add('active');
+                document.getElementById('solver-section').classList.add('active');
             }
+        }
+
+        // Вставка текста из буфера обмена в поле URL
+        async function pasteClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('assignment-url').value = text;
+                document.getElementById('solve-status').textContent = 'Đã dán từ clipboard.';
+            } catch (err) {
+                document.getElementById('solve-status').textContent = 'Không thể dán, hãy nhập thủ công.';
+            }
+        }
+
+        // Заглушка входа (позже здесь будет реальный запрос)
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (!username || !password) {
+                document.getElementById('login-status').textContent = 'Vui lòng nhập đầy đủ thông tin.';
+                return;
+            }
+            // Здесь должен быть код аутентификации на olm.vn
+            document.getElementById('login-status').textContent = 'Đăng nhập thành công (giả lập).';
+            // После реального входа можно переключиться на вкладку solver
+            // switchTab('solver');
+        }
+
+        // Заглушка решения (позже здесь будет вызов бота)
+        function solve() {
+            const url = document.getElementById('assignment-url').value;
+            if (!url) {
+                document.getElementById('solve-status').textContent = 'Vui lòng nhập link bài tập.';
+                return;
+            }
+            // Здесь должен запускаться парсер/бот
+            document.getElementById('solve-status').textContent = 'Đang giải bài tập (giả lập)...';
         }
     </script>
 </body>
