@@ -2,149 +2,414 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Đăng nhập · OLM</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/png" href="https://rs.olm.vn/images/icon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OLM Tool · iOS + Backend Proxy</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:#0a0e1a;color:#e5e7eb;font-family:'Segoe UI',system-ui,sans-serif;padding:20px;}
+        .container{max-width:1200px;margin:0 auto;}
+        .card{background:#111827;border-radius:20px;padding:24px;margin-bottom:20px;border:1px solid #1f2937;}
+        .flex-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+        .input-group{margin-bottom:15px;}
+        input,select{background:#0f172a;border:1px solid #1f2937;padding:10px 14px;border-radius:12px;color:white;width:100%;}
+        button{background:#10b981;border:none;padding:10px 20px;border-radius:40px;color:white;font-weight:600;cursor:pointer;}
+        button.secondary{background:#4b5563;}
+        .hidden{display:none;}
+        .log-area{background:#0a0e1a;border-radius:12px;padding:12px;font-family:monospace;font-size:0.8rem;max-height:200px;overflow-y:auto;margin-top:12px;}
+        .progress-bar{height:6px;background:#2d3748;border-radius:10px;margin:10px 0;}
+        .progress-fill{width:0%;height:100%;background:#10b981;transition:width 0.3s;}
+        .toast{position:fixed;bottom:20px;right:20px;background:#1f2937;padding:10px 18px;border-radius:40px;border-left:4px solid #10b981;z-index:1000;}
+        .status-badge{display:inline-block;padding:4px 12px;border-radius:40px;background:#374151;}
+        .assignment-item{padding:12px 16px;border-bottom:1px solid #1f2937;display:flex;align-items:center;gap:12px;}
+        .badge{padding:2px 8px;border-radius:40px;font-size:0.7rem;font-weight:600;}
+        .badge-video{background:#1e3a8a;color:#93c5fd;}
+        .badge-lythuyet{background:#4c1d95;color:#c4b5fd;}
+        .badge-kiemtra{background:#b45309;color:#fed7aa;}
+        .badge-baitap{background:#065f46;color:#a7f3d0;}
+    </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="card-header">
-                <div class="logo-area">
-                    <img src="https://rs.olm.vn/v2/login/logo.png" alt="OLM" class="logo">
-                </div>
-                <h1 class="title">Đăng nhập</h1>
-                <p class="subtitle">Tiếp tục hành trình học tập cùng OLM</p>
-            </div>
-
-            <!-- Форма с обычной отправкой (не fetch) - нет CORS, нет 405 -->
-            <form id="loginForm" class="auth-form" action="https://olm.vn/dangnhap" method="POST">
-                <!-- CSRF токен (обязателен, берем из дампа) -->
-                <input type="hidden" name="_token" value="C4PVZWxAhOWp8D3DaLlYGsHXoovkMjzQODFhVD1C">
-                
-                <div class="input-group">
-                    <div class="input-icon">
-                        <img src="https://rs.olm.vn/icon/outline/user.svg" alt="user">
-                    </div>
-                    <input type="text" id="username" name="username" placeholder="Tên đăng nhập hoặc Email" autocomplete="username" required>
-                </div>
-
-                <div class="input-group">
-                    <div class="input-icon">
-                        <img src="https://rs.olm.vn/icon/outline/lock.svg" alt="lock">
-                    </div>
-                    <input type="password" id="password" name="password" placeholder="Mật khẩu" autocomplete="current-password" required>
-                    <button type="button" class="toggle-password" aria-label="Hiển thị mật khẩu">
-                        <img src="https://rs.olm.vn/icon/outline/eye.svg" alt="eye" class="eye-icon">
-                    </button>
-                </div>
-
-                <div class="options-row">
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="remember" id="remember" value="1">
-                        <span class="checkmark"></span>
-                        <span class="label-text">Ghi nhớ đăng nhập</span>
-                    </label>
-                    <button type="button" id="forgotBtn" class="link-button">Quên mật khẩu</button>
-                </div>
-
-                <button type="submit" class="submit-btn">Đăng nhập</button>
-
-                <div class="divider">
-                    <span class="line"></span>
-                    <span class="or-text">hoặc</span>
-                    <span class="line"></span>
-                </div>
-
-                <div class="social-buttons">
-                    <a href="https://olm.vn/social/google/redirect" class="social-btn google">
-                        <img src="https://rs.olm.vn/icon/icon-google.svg" alt="Google">
-                        <span>Tiếp tục bằng Google</span>
-                    </a>
-                    <a href="https://olm.vn/social/hanoi/redirect" class="social-btn hanoi">
-                        <img src="https://rs.olm.vn/icon/logo-hanoi.png" alt="Hanoi">
-                        <span>Đăng nhập bằng CSDL GDĐT</span>
-                    </a>
-                </div>
-
-                <div class="register-link">
-                    <span class="text-muted">Bạn chưa có tài khoản?</span>
-                    <a href="https://olm.vn/dang-ky" class="accent-link">Đăng ký ngay</a>
-                </div>
-            </form>
+<div class="container">
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div><h2>🤖 OLM Tool · iOS Ready</h2><p>Kết nối backend trên Render → không lỗi CORS</p></div>
+            <div id="loginStatus" class="status-badge">🔴 Chưa đăng nhập</div>
         </div>
-        <div class="auth-illustration">
-            <img src="https://rs.olm.vn/v2/login/logo.png" alt="Illustration">
-        </div>
+        <div style="margin-top:8px; background:#1e293b; border-radius:12px; padding:6px 12px; font-size:0.75rem;" id="backendStatus"></div>
     </div>
 
-    <!-- Модалка (без изменений) -->
-    <div id="forgotModal" class="modal-overlay" style="display: none;">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3>Quên mật khẩu</h3>
-                <button class="close-modal">&times;</button>
+    <div id="loginPanel" class="card">
+        <h3>🔐 Đăng nhập OLM</h3>
+        <div class="input-group"><label>Username / Email</label><input type="text" id="username"></div>
+        <div class="input-group"><label>Mật khẩu</label><input type="password" id="password"></div>
+        <div class="flex-row" style="justify-content:space-between;">
+            <div><input type="checkbox" id="rememberMe"> <label>Ghi nhớ</label></div>
+            <button id="loginBtn">🚀 Đăng nhập</button>
+        </div>
+        <div id="loginError" style="color:#ef4444; margin-top:12px;"></div>
+    </div>
+
+    <div id="appPanel" class="hidden">
+        <div class="card">
+            <div class="flex-row" style="justify-content:space-between;">
+                <div>👤 <span id="userName">—</span> (<span id="userTier">free</span>)</div>
+                <div>📚 BT: <span id="remainUses">0</span> | 📝 KT: <span id="examUses">0</span></div>
+                <button id="logoutBtn" class="secondary">Đăng xuất</button>
             </div>
-            <div class="modal-body">
-                <p>Nhập email đã đăng ký để nhận hướng dẫn khôi phục.</p>
-                <input type="email" id="resetEmail" placeholder="Email của bạn" class="modal-input">
+        </div>
+        <div class="card">
+            <h3>⚙️ Cấu hình</h3>
+            <div class="flex-row">
+                <div style="flex:1"><label>Số trang</label><input type="number" id="pages" value="3" min="1" max="30"></div>
+                <div style="flex:1"><label>Chế độ</label>
+                    <select id="scanMode"><option value="pending">Chỉ bài chưa làm</option><option value="all">Tất cả</option></select>
+                </div>
+                <button id="scanBtn">🔍 Quét bài</button>
             </div>
-            <div class="modal-footer">
-                <button class="modal-cancel">Huỷ bỏ</button>
-                <button class="modal-submit" id="sendResetBtn">Gửi yêu cầu</button>
+        </div>
+        <div id="progressArea" class="hidden card">
+            <div id="progressText">Đang xử lý...</div>
+            <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+            <div id="logArea" class="log-area"></div>
+        </div>
+        <div class="card">
+            <h3>📋 Danh sách bài tập</h3>
+            <div id="assignmentList">📭 Nhấn "Quét bài"</div>
+            <div class="flex-row" style="margin-top:16px;">
+                <button id="solveBtn" disabled>▶ Giải bài đã chọn</button>
+                <button id="genKeyBtn" class="secondary">✨ Tạo key (FREE)</button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        // Только вспомогательный JS (показ/скрытие пароля, модалка). Без fetch/XMLHttpRequest.
-        (function() {
-            // Переключение видимости пароля
-            document.querySelectorAll('.toggle-password').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    const input = this.closest('.input-group').querySelector('input[type="password"], input[type="text"]');
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        const img = this.querySelector('.eye-icon');
-                        if (img) img.src = 'https://rs.olm.vn/icon/outline/eye-off.svg';
-                    } else {
-                        input.type = 'password';
-                        const img = this.querySelector('.eye-icon');
-                        if (img) img.src = 'https://rs.olm.vn/icon/outline/eye.svg';
-                    }
-                });
+<script>
+    // ======================== CONFIG ========================
+    const BACKEND_URL = 'https://YOUR_RENDER_URL.onrender.com'; // ⚠️ THAY BẰNG URL CỦA BẠN
+    const PROXY_PATH = '/proxy?url=';
+    
+    let csrfToken = '';
+    let sessionCookies = '';
+    let loggedIn = false;
+    let userData = null;
+    let assignments = [];
+    let selectedIds = new Set();
+
+    // DOM
+    const loginPanel = document.getElementById('loginPanel');
+    const appPanel = document.getElementById('appPanel');
+    const loginStatus = document.getElementById('loginStatus');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const scanBtn = document.getElementById('scanBtn');
+    const solveBtn = document.getElementById('solveBtn');
+    const genKeyBtn = document.getElementById('genKeyBtn');
+    const userNameSpan = document.getElementById('userName');
+    const userTierSpan = document.getElementById('userTier');
+    const remainSpan = document.getElementById('remainUses');
+    const examSpan = document.getElementById('examUses');
+    const assignmentListDiv = document.getElementById('assignmentList');
+    const progressArea = document.getElementById('progressArea');
+    const logDiv = document.getElementById('logArea');
+    const progressFill = document.getElementById('progressFill');
+    const progressTextSpan = document.getElementById('progressText');
+    const backendStatusSpan = document.getElementById('backendStatus');
+
+    function showToast(msg, isError = false) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.borderLeftColor = isError ? '#ef4444' : '#10b981';
+        toast.innerText = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+    function addLog(msg, type = 'info') {
+        if (!logDiv) return;
+        const entry = document.createElement('div');
+        entry.style.marginBottom = '4px';
+        entry.style.color = type === 'error' ? '#ef4444' : (type === 'success' ? '#10b981' : '#9ca3af');
+        entry.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        logDiv.appendChild(entry);
+        logDiv.scrollTop = logDiv.scrollHeight;
+    }
+    function updateUI() {
+        if (!userData) return;
+        userNameSpan.innerText = userData.username;
+        userTierSpan.innerText = userData.tier;
+        const unlimited = userData.tier === 'vip' || userData.tier === 'ultra';
+        remainSpan.innerText = unlimited ? '∞' : (userData.remain ?? 0);
+        examSpan.innerText = (userData.tier === 'ultra') ? '∞' : (userData.exam_remain ?? 0);
+        loginStatus.innerHTML = `✅ ${userData.username} (${userData.tier})`;
+    }
+
+    async function backendFetch(url, options = {}) {
+        const proxyUrl = BACKEND_URL + PROXY_PATH + encodeURIComponent(url);
+        const response = await fetch(proxyUrl, {
+            method: options.method || 'GET',
+            headers: options.headers || {},
+            body: options.body,
+            redirect: 'manual'
+        });
+        const setCookie = response.headers.get('set-cookie');
+        if (setCookie && setCookie.includes('=')) {
+            sessionCookies = setCookie.split(';')[0];
+        }
+        return response;
+    }
+
+    async function doLogin() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        if (!username || !password) { showToast('Nhập đầy đủ', true); return; }
+
+        loginBtn.disabled = true;
+        loginBtn.innerText = 'Đang xử lý...';
+        document.getElementById('loginError').innerText = '';
+
+        try {
+            const initResp = await backendFetch('https://olm.vn/dangnhap');
+            const html = await initResp.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            let token = doc.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (!token) token = doc.querySelector('input[name="_token"]')?.value;
+            if (!token) throw new Error('Không lấy được CSRF token');
+            csrfToken = token;
+
+            const formData = new URLSearchParams();
+            formData.append('_token', csrfToken);
+            formData.append('username', username);
+            formData.append('password', password);
+            formData.append('remember', '1');
+
+            const loginResp = await backendFetch('https://olm.vn/dangnhap', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString()
             });
+            if (loginResp.status !== 302) throw new Error('Sai tài khoản hoặc mật khẩu');
+            if (!sessionCookies) throw new Error('Không nhận được cookie');
 
-            // Модалка "забыли пароль"
-            const forgotBtn = document.getElementById('forgotBtn');
-            const modal = document.getElementById('forgotModal');
-            const closeModal = document.querySelector('.close-modal');
-            const modalCancel = document.querySelector('.modal-cancel');
-            const sendResetBtn = document.getElementById('sendResetBtn');
+            if (document.getElementById('rememberMe').checked) {
+                localStorage.setItem('olm_auth', JSON.stringify({ username, cookies: sessionCookies, csrf: csrfToken }));
+            } else localStorage.removeItem('olm_auth');
 
-            function showModal() { modal.style.display = 'flex'; }
-            function hideModal() { modal.style.display = 'none'; }
+            userData = { username, tier: 'free', remain: 5, exam_remain: 1, keys_today: 0, max_keys: 2 };
+            loggedIn = true;
+            updateUI();
+            loginPanel.classList.add('hidden');
+            appPanel.classList.remove('hidden');
+            showToast('Đăng nhập thành công!');
+            addLog('Đã đăng nhập qua backend proxy', 'success');
+            await scanAssignments();
+        } catch (err) {
+            document.getElementById('loginError').innerText = err.message;
+            showToast(err.message, true);
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.innerText = '🚀 Đăng nhập';
+        }
+    }
 
-            if (forgotBtn) forgotBtn.addEventListener('click', showModal);
-            if (closeModal) closeModal.addEventListener('click', hideModal);
-            if (modalCancel) modalCancel.addEventListener('click', hideModal);
-            window.addEventListener('click', (e) => { if (e.target === modal) hideModal(); });
+    async function scanAssignments() {
+        if (!sessionCookies) { showToast('Phiên hết hạn', true); return; }
+        const pages = parseInt(document.getElementById('pages').value) || 3;
+        const mode = document.getElementById('scanMode').value;
+        addLog(`Quét ${pages} trang...`);
+        progressArea.classList.remove('hidden');
+        progressFill.style.width = '0%';
+        if (logDiv) logDiv.innerHTML = '';
+        const all = [];
+        for (let p = 1; p <= pages; p++) {
+            const url = `https://olm.vn/bai-tap-cua-toi?page=${p}`;
+            try {
+                const resp = await backendFetch(url, { headers: { 'Cookie': sessionCookies } });
+                const html = await resp.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                let items = doc.querySelectorAll('.assignment-item, .exercise-item, .task-item, .study-item');
+                if (items.length === 0) items = doc.querySelectorAll('.row-exercise, .ex-item');
+                for (let it of items) {
+                    const titleEl = it.querySelector('.title a, .exercise-title a, .task-name, .item-name, a');
+                    let title = titleEl ? titleEl.innerText.trim() : 'Không có tiêu đề';
+                    let urlEl = it.querySelector('.title a, .exercise-title a, .task-link, a');
+                    let rel = urlEl ? urlEl.getAttribute('href') : '';
+                    if (!rel && titleEl && titleEl.tagName === 'A') rel = titleEl.getAttribute('href');
+                    const full = rel ? (rel.startsWith('http') ? rel : 'https://olm.vn' + rel) : '#';
+                    let type = 'Bài tập';
+                    const txt = (title + ' ' + (it.innerText || '')).toLowerCase();
+                    if (txt.includes('video')) type = 'Video';
+                    else if (txt.includes('lý thuyết')) type = 'Lý thuyết';
+                    else if (txt.includes('kiểm tra') || txt.includes('kiem tra')) type = 'Kiểm tra';
+                    const done = txt.includes('đã làm') || txt.includes('hoàn thành');
+                    if (mode === 'pending' && done) continue;
+                    if (full !== '#') all.push({ id: Date.now()+'-'+Math.random(), title, url: full, type, done });
+                }
+                progressFill.style.width = (p / pages) * 100 + '%';
+                progressTextSpan.innerText = `Đã quét ${p}/${pages} trang`;
+            } catch(e) { addLog(`Lỗi trang ${p}: ${e.message}`, 'error'); }
+        }
+        assignments = all;
+        selectedIds.clear();
+        renderAssignments();
+        addLog(`Tìm thấy ${assignments.length} bài.`, 'success');
+        progressFill.style.width = '100%';
+        setTimeout(() => progressArea.classList.add('hidden'), 2000);
+        if (!assignments.length) addLog('Không tìm thấy bài nào.', 'error');
+    }
 
-            // Отправка запроса на восстановление пароля (через fetch, но это GET? лучше отдельная форма)
-            // Однако для восстановления можно просто перенаправить на страницу OLM.
-            if (sendResetBtn) {
-                sendResetBtn.addEventListener('click', () => {
-                    const email = document.getElementById('resetEmail').value;
-                    if (!email) {
-                        alert('Vui lòng nhập email');
-                        return;
-                    }
-                    // Для избежания CORS просто перенаправляем пользователя на страницу запроса
-                    window.location.href = `https://olm.vn/send-forget-password?email=${encodeURIComponent(email)}`;
-                });
-            }
-        })();
-    </script>
+    function renderAssignments() {
+        if (!assignments.length) { assignmentListDiv.innerHTML = '<div style="padding:16px;text-align:center;">📭 Không có bài tập</div>'; return; }
+        let html = '';
+        assignments.forEach(a => {
+            const checked = selectedIds.has(a.id) ? 'checked' : '';
+            let badge = '';
+            if (a.type === 'Video') badge = 'badge-video';
+            else if (a.type === 'Lý thuyết') badge = 'badge-lythuyet';
+            else if (a.type === 'Kiểm tra') badge = 'badge-kiemtra';
+            else badge = 'badge-baitap';
+            html += `<div class="assignment-item"><input type="checkbox" data-id="${a.id}" ${checked} class="assign-check"><div style="flex:1"><div>${escapeHtml(a.title)}</div><div><span class="badge ${badge}">${a.type}</span> ${a.done ? '✅ Đã làm' : '⏳ Chưa làm'}</div></div></div>`;
+        });
+        assignmentListDiv.innerHTML = html;
+        document.querySelectorAll('.assign-check').forEach(cb => {
+            cb.addEventListener('change', (e) => {
+                const id = cb.getAttribute('data-id');
+                if (cb.checked) selectedIds.add(id);
+                else selectedIds.delete(id);
+                solveBtn.disabled = selectedIds.size === 0;
+            });
+        });
+        solveBtn.disabled = selectedIds.size === 0;
+    }
+
+    function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+
+    async function solveSelected() {
+        if (!selectedIds.size) { showToast('Chưa chọn bài', true); return; }
+        const toSolve = assignments.filter(a => selectedIds.has(a.id));
+        addLog(`Giải ${toSolve.length} bài...`);
+        progressArea.classList.remove('hidden');
+        progressFill.style.width = '0%';
+        if (logDiv) logDiv.innerHTML = '';
+        let solved = 0;
+        for (let i = 0; i < toSolve.length; i++) {
+            const a = toSolve[i];
+            progressTextSpan.innerText = `Đang giải: ${a.title.substring(0,50)}...`;
+            addLog(`Xử lý: ${a.title} (${a.type})`, 'info');
+            try {
+                const pageResp = await backendFetch(a.url, { headers: { 'Cookie': sessionCookies } });
+                const html = await pageResp.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                let success = false, msg = '';
+                if (a.type === 'Video' || a.type === 'Lý thuyết') {
+                    const btn = doc.querySelector('button:contains("Đã xem"), button:contains("Hoàn thành")');
+                    if (btn) {
+                        let action = btn.getAttribute('formaction') || btn.getAttribute('href');
+                        if (action) {
+                            const postRes = await backendFetch(action.startsWith('http') ? action : 'https://olm.vn' + action, {
+                                method: 'POST',
+                                headers: { 'Cookie': sessionCookies, 'Content-Type': 'application/x-www-form-urlencoded' },
+                                body: '_token=' + encodeURIComponent(csrfToken)
+                            });
+                            success = postRes.status === 200;
+                            msg = success ? 'Đã đánh dấu' : 'Lỗi đánh dấu';
+                        } else success = true;
+                    } else { success = true; msg = 'Tự động hoàn thành'; }
+                } else {
+                    const form = doc.querySelector('form.submit-answer, form[action*="nop-bai"], form.submit-exam');
+                    if (!form) throw new Error('Không tìm thấy form');
+                    const action = form.getAttribute('action');
+                    const inputs = doc.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+                    const answerData = new URLSearchParams();
+                    const groups = new Map();
+                    inputs.forEach(inp => {
+                        const name = inp.getAttribute('name');
+                        if (name && !groups.has(name)) groups.set(name, inp.value);
+                    });
+                    groups.forEach((val, name) => answerData.append(name, val));
+                    answerData.append('_token', csrfToken);
+                    const submitRes = await backendFetch(action.startsWith('http') ? action : 'https://olm.vn' + action, {
+                        method: 'POST',
+                        headers: { 'Cookie': sessionCookies, 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: answerData.toString()
+                    });
+                    success = submitRes.status === 200;
+                    msg = success ? 'Đã nộp bài' : 'Nộp thất bại';
+                }
+                if (success) { solved++; addLog(`✓ ${a.title.substring(0,45)} -> ${msg}`, 'success'); }
+                else addLog(`✗ ${a.title.substring(0,45)} -> ${msg}`, 'error');
+            } catch(err) { addLog(`✗ ${a.title.substring(0,45)} -> Lỗi: ${err.message}`, 'error'); }
+            const percent = ((i+1)/toSolve.length)*100;
+            progressFill.style.width = percent + '%';
+            await new Promise(r => setTimeout(r, 800));
+        }
+        progressTextSpan.innerText = `Hoàn tất: ${solved}/${toSolve.length} bài thành công`;
+        addLog(`Kết thúc: ${solved}/${toSolve.length} bài được giải.`, solved === toSolve.length ? 'success' : 'error');
+        setTimeout(() => progressArea.classList.add('hidden'), 2000);
+        await scanAssignments();
+    }
+
+    function genKeyLocal() {
+        if (userData.tier !== 'free') { showToast('VIP/Ultra không cần key', true); return; }
+        if (userData.keys_today >= userData.max_keys) { showToast('Đã tạo đủ 2 key hôm nay', true); return; }
+        userData.keys_today++;
+        userData.remain += 5;
+        userData.exam_remain += 1;
+        updateUI();
+        showToast(`Key mới: DEMO-${Math.random().toString(36).substring(2,8).toUpperCase()} (+5 BT, +1 KT)`);
+        addLog('Tạo key thành công (giả lập).', 'success');
+    }
+
+    function logout() {
+        loggedIn = false;
+        sessionCookies = '';
+        userData = null;
+        assignments = [];
+        selectedIds.clear();
+        loginPanel.classList.remove('hidden');
+        appPanel.classList.add('hidden');
+        loginStatus.innerHTML = '🔴 Chưa đăng nhập';
+        localStorage.removeItem('olm_auth');
+        showToast('Đã đăng xuất');
+    }
+
+    async function checkBackend() {
+        try {
+            const res = await fetch(BACKEND_URL + '/proxy?url=https://httpbin.org/status/200');
+            if (res.ok) backendStatusSpan.innerHTML = '✅ Backend đang hoạt động | ' + BACKEND_URL;
+            else throw new Error();
+        } catch(e) {
+            backendStatusSpan.innerHTML = '❌ Không kết nối được backend! Hãy deploy backend lên Render trước.';
+            showToast('Backend chưa chạy. Xem hướng dẫn.', true);
+        }
+    }
+
+    function restoreSession() {
+        const saved = localStorage.getItem('olm_auth');
+        if (saved) {
+            try {
+                const { username, cookies, csrf } = JSON.parse(saved);
+                if (username && cookies) {
+                    sessionCookies = cookies;
+                    if (csrf) csrfToken = csrf;
+                    userData = { username, tier: 'free', remain: 5, exam_remain: 1, keys_today: 0, max_keys: 2 };
+                    loggedIn = true;
+                    updateUI();
+                    loginPanel.classList.add('hidden');
+                    appPanel.classList.remove('hidden');
+                    showToast('Khôi phục phiên thành công');
+                    addLog('Đã khôi phục cookie.', 'success');
+                }
+            } catch(e) {}
+        }
+    }
+
+    loginBtn.addEventListener('click', doLogin);
+    logoutBtn.addEventListener('click', logout);
+    scanBtn.addEventListener('click', scanAssignments);
+    solveBtn.addEventListener('click', solveSelected);
+    genKeyBtn.addEventListener('click', genKeyLocal);
+    checkBackend();
+    restoreSession();
+</script>
 </body>
 </html>
