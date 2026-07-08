@@ -218,27 +218,38 @@
     width:100%; height:100%;
     display:block;
     overflow:visible;
+    shape-rendering:crispEdges;
     transform:scaleX(var(--flip, 1));
     transition:transform .15s ease;
   }
   .deco-cat .cat-visual *{ fill:#fff; }
-  .deco-cat .cat-tail{ fill:none; stroke:#fff; stroke-width:4; stroke-linecap:round; transform-origin:15px 20px; animation:tailSwish 1.6s ease-in-out infinite; }
+  .deco-cat .cat-eye{ fill:#2a1f45; }
+  .deco-cat .cat-tail{
+    fill:none; stroke:#fff; stroke-width:4; stroke-linecap:square; stroke-linejoin:miter;
+    transform-origin:15px 20px;
+    animation:tailSwish 1.2s steps(4) infinite;
+  }
   .deco-cat .cat-leg{ animation-play-state:paused; }
-  .deco-cat .leg-a{ animation:legSwingA .42s ease-in-out infinite; }
-  .deco-cat .leg-b{ animation:legSwingB .42s ease-in-out infinite; }
+  .deco-cat .leg-a{ animation:legSwingA .36s steps(2) infinite; }
+  .deco-cat .leg-b{ animation:legSwingB .36s steps(2) infinite; }
   .deco-cat.walking .cat-leg{ animation-play-state:running; }
   .deco-cat.dragging .cat-tail{ animation:none; }
+  .deco-cat .cat-eyes{ animation:catBlink 3.2s steps(1) infinite; transform-origin:center; }
   @keyframes tailSwish{
-    0%,100%{ transform:rotate(-8deg); }
-    50%{ transform:rotate(10deg); }
+    0%,100%{ transform:rotate(-10deg); }
+    50%{ transform:rotate(12deg); }
   }
   @keyframes legSwingA{
-    0%,100%{ transform:rotate(22deg); }
-    50%{ transform:rotate(-22deg); }
+    0%,100%{ transform:rotate(24deg); }
+    50%{ transform:rotate(-24deg); }
   }
   @keyframes legSwingB{
-    0%,100%{ transform:rotate(-22deg); }
-    50%{ transform:rotate(22deg); }
+    0%,100%{ transform:rotate(-24deg); }
+    50%{ transform:rotate(24deg); }
+  }
+  @keyframes catBlink{
+    0%, 92%, 100%{ transform:scaleY(1); }
+    96%{ transform:scaleY(.1); }
   }
   .paw-trail{
     position:absolute;
@@ -383,7 +394,7 @@
     gap:10px;
   }
   .tech-row{ margin-bottom:18px; }
-  .tech-row img{ height:34px; display:block; }
+  .tech-row img{ width:100%; max-width:340px; height:auto; display:block; }
 
   .social-icon{
     width:38px; height:38px;
@@ -467,16 +478,20 @@
 
     <div class="deco-star">✦</div>
     <div class="deco-cat" id="decoCat">
-      <svg class="cat-visual" viewBox="0 0 64 44" xmlns="http://www.w3.org/2000/svg">
-        <g class="cat-leg leg-a" style="transform-origin:47px 30px"><rect x="45" y="30" width="4" height="12" rx="2"></rect></g>
-        <g class="cat-leg leg-a" style="transform-origin:15px 30px"><rect x="13" y="30" width="4" height="12" rx="2"></rect></g>
-        <g class="cat-leg leg-b" style="transform-origin:41px 30px"><rect x="39" y="30" width="4" height="12" rx="2"></rect></g>
-        <g class="cat-leg leg-b" style="transform-origin:21px 30px"><rect x="19" y="30" width="4" height="12" rx="2"></rect></g>
-        <path class="cat-tail" d="M15,20 Q3,14 6,4"></path>
+      <svg class="cat-visual" viewBox="0 0 64 44" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+        <g class="cat-leg leg-a" style="transform-origin:47px 30px"><rect x="45" y="30" width="4" height="12" rx="0"></rect></g>
+        <g class="cat-leg leg-a" style="transform-origin:15px 30px"><rect x="13" y="30" width="4" height="12" rx="0"></rect></g>
+        <g class="cat-leg leg-b" style="transform-origin:41px 30px"><rect x="39" y="30" width="4" height="12" rx="0"></rect></g>
+        <g class="cat-leg leg-b" style="transform-origin:21px 30px"><rect x="19" y="30" width="4" height="12" rx="0"></rect></g>
+        <path class="cat-tail" d="M15,20 L6,20 L6,12 L2,12 L2,4"></path>
         <ellipse cx="31" cy="22" rx="17" ry="11"></ellipse>
         <circle cx="50" cy="15" r="9"></circle>
         <polygon points="44,9 47,1 50,8"></polygon>
         <polygon points="49,8 53,0 56,8"></polygon>
+        <g class="cat-eyes">
+          <rect class="cat-eye" x="47" y="13" width="2" height="3"></rect>
+          <rect class="cat-eye" x="53" y="13" width="2" height="3"></rect>
+        </g>
       </svg>
     </div>
     <div class="deco-ring"></div>
@@ -515,8 +530,19 @@ const CONFIG = {
   school: "Thành phố Hồ Chí Minh",
   country: "中华人民共和国",
 
-  // Mã icon theo skillicons.dev — https://skillicons.dev để tra thêm mã khác
-  techStack: ["mysql", "cpp", "cs", "py", "lua", "html", "css", "vscode"],
+  // Mã icon theo skillicons.dev — https://skillicons.dev để tra thêm/bớt mã khác
+  techStack: [
+    // Ngôn ngữ lập trình
+    "c","cpp","cs","java","py","js","ts","php","ruby","go","rust",
+    "swift","kotlin","dart","r","scala","perl","lua","haskell","clojure","solidity","matlab","bash","powershell",
+    "html","css",
+    // Framework / thư viện
+    "react","vue","angular","svelte","next","nodejs","express","django","flask","spring","laravel","rails","dotnet","flutter","tailwind","bootstrap","sass",
+    // Database / hạ tầng / công cụ
+    "mysql","mongodb","postgres","redis","firebase","graphql","git","github","gitlab","docker","kubernetes","aws","gcp","azure","nginx","linux","windows","apple",
+    // Editor / thiết kế
+    "vscode","vim","figma","ps","ai","blender","unity"
+  ],
 
   socials: [
     { icon: "facebook", url: "#" },
@@ -843,15 +869,28 @@ function renderIconRow(containerId, items, size){
 // Map mã skillicons.dev -> slug simpleicons.org, chỉ dùng khi skillicons.dev
 // không tải được (fallback), để vẫn hiện được icon dù xấu hơn 1 chút.
 const SKILLICON_FALLBACK_SLUG = {
-  mysql:"mysql", cpp:"cplusplus", cs:"csharp", py:"python",
-  lua:"lua", html:"html5", css:"css", vscode:"visualstudiocode"
+  c:"c", cpp:"cplusplus", cs:"csharp", java:"openjdk", py:"python", js:"javascript", ts:"typescript",
+  php:"php", ruby:"ruby", go:"go", rust:"rust", swift:"swift", kotlin:"kotlin", dart:"dart",
+  r:"r", scala:"scala", perl:"perl", lua:"lua", haskell:"haskell", clojure:"clojure",
+  solidity:"solidity", matlab:"mathworks", bash:"gnubash", powershell:"powershell",
+  html:"html5", css:"css",
+  react:"react", vue:"vuedotjs", angular:"angular", svelte:"svelte", next:"nextdotjs",
+  nodejs:"nodedotjs", express:"express", django:"django", flask:"flask", spring:"springboot",
+  laravel:"laravel", rails:"rubyonrails", dotnet:"dotnet", flutter:"flutter",
+  tailwind:"tailwindcss", bootstrap:"bootstrap", sass:"sass",
+  mysql:"mysql", mongodb:"mongodb", postgres:"postgresql", redis:"redis", firebase:"firebase",
+  graphql:"graphql", git:"git", github:"github", gitlab:"gitlab", docker:"docker",
+  kubernetes:"kubernetes", aws:"amazonaws", gcp:"googlecloud", azure:"microsoftazure",
+  nginx:"nginx", linux:"linux", windows:"windows11", apple:"apple",
+  vscode:"visualstudiocode", vim:"vim", figma:"figma", ps:"adobephotoshop", ai:"adobeillustrator",
+  blender:"blender", unity:"unity"
 };
 
 function renderTechRow(containerId, codes){
   const container = document.getElementById(containerId);
   const img = document.createElement('img');
   img.alt = 'tech stack';
-  img.src = `https://skillicons.dev/icons?i=${codes.join(',')}`;
+  img.src = `https://skillicons.dev/icons?i=${codes.join(',')}&perline=8`;
   img.onerror = function(){
     // skillicons.dev không tải được (mạng chặn, sập...) -> quay về từng icon riêng lẻ
     container.innerHTML = '';
@@ -867,24 +906,29 @@ function renderTechRow(containerId, codes){
 }
 
 /* ============================================================
-   MÈO TƯƠNG TÁC: tự đi theo con trỏ/ngón tay, kéo-thả được,
-   chân thật sự "bước" khi di chuyển, luôn bị giữ trong viền thẻ
+   MÈO TƯƠNG TÁC kiểu "desktop pet": mặc định NGỒI YÊN và nhìn
+   theo hướng con trỏ, thỉnh thoảng tự đứng dậy đi lang thang,
+   chạm/vuốt vào thẻ thì chạy tới đó, và vẫn kéo-thả tự do được.
+   Luôn bị giữ bên trong viền thẻ.
 ============================================================ */
 function initCat(catEl){
   const cardEl = catEl.closest('.card');
-  const margin = 30;          // khoảng cách tối thiểu từ tâm mèo tới viền thẻ (mèo rộng ~56px)
-  const speed = 110;          // tốc độ đi bộ (px/giây)
-  const stopDist = 3;         // sát mục tiêu cỡ này thì coi như đã tới, đứng lại
+  const margin = 30;          // khoảng cách tối thiểu từ tâm mèo tới viền thẻ
+  const wanderSpeed = 90;     // px/s khi tự đi lang thang
+  const chaseSpeed = 160;     // px/s khi được "gọi" bằng chạm/vuốt
+  const stopDist = 3;
 
   let pos = null, target = null;
   let flip = 1;
-  let dragging = false;
+  let mode = 'idle';          // 'idle' | 'walking' | 'dragging'
+  let curSpeed = wanderSpeed;
   let lastNow = null;
   let lastPawTime = 0;
+  let wanderTimer = null;
   let pointerId = null;
+  let gestureActive = false;  // đang nhấn+vuốt trên thẻ (không phải nhấn lên chính con mèo)
 
   function bounds(){
-    // Dùng kích thước thật của thẻ để mèo không bao giờ đi lọt ra ngoài viền
     const w = cardEl.clientWidth, h = cardEl.clientHeight;
     return { minX:margin, maxX:Math.max(margin, w-margin), minY:margin, maxY:Math.max(margin, h-margin) };
   }
@@ -910,17 +954,34 @@ function initCat(catEl){
     setTimeout(()=> paw.remove(), 700);
   }
 
+  function scheduleWander(){
+    clearTimeout(wanderTimer);
+    const delay = 3500 + Math.random()*5000; // ngồi yên 3.5–8.5s rồi mới tự đứng dậy đi
+    wanderTimer = setTimeout(()=>{
+      if(mode !== 'idle') return;
+      const b = bounds();
+      target = clamp({ x: b.minX + Math.random()*(b.maxX-b.minX), y: b.minY + Math.random()*(b.maxY-b.minY) });
+      curSpeed = wanderSpeed;
+      mode = 'walking';
+    }, delay);
+  }
+
   // Vị trí khởi đầu: góc dưới-phải của thẻ, trong giới hạn cho phép
   requestAnimationFrame(()=>{
     const b = bounds();
     pos = clamp({ x: b.maxX, y: b.maxY - 26 });
     target = { ...pos };
     render();
+    scheduleWander();
   });
 
-  function setTargetFromClient(clientX, clientY){
+  function goTo(clientX, clientY, speed){
+    if(mode === 'dragging' || !pos) return;
     const rect = cardEl.getBoundingClientRect();
     target = clamp({ x: clientX - rect.left, y: clientY - rect.top });
+    curSpeed = speed;
+    mode = 'walking';
+    clearTimeout(wanderTimer);
   }
 
   function frame(now){
@@ -929,11 +990,11 @@ function initCat(catEl){
       const dt = Math.min(50, now - lastNow) / 1000;
       lastNow = now;
 
-      if(!dragging){
+      if(mode === 'walking'){
         const dx = target.x - pos.x, dy = target.y - pos.y;
         const dist = Math.hypot(dx, dy);
         if(dist > stopDist){
-          const step = Math.min(dist, speed*dt);
+          const step = Math.min(dist, curSpeed*dt);
           pos.x += (dx/dist) * step;
           pos.y += (dy/dist) * step;
           if(Math.abs(dx) > 1) flip = dx < 0 ? -1 : 1;
@@ -941,7 +1002,9 @@ function initCat(catEl){
           catEl.classList.add('walking');
           spawnPaw(now);
         } else {
+          mode = 'idle';
           catEl.classList.remove('walking');
+          scheduleWander();
         }
         render();
       }
@@ -950,33 +1013,55 @@ function initCat(catEl){
   }
   requestAnimationFrame(frame);
 
-  // Mèo tự đi về phía con trỏ/chạm ở bất kỳ đâu trên trang
+  // Chạm hoặc vuốt lên THẺ (không phải lên chính con mèo) -> mèo chạy tới đó,
+  // vuốt/kéo con trỏ đi đâu thì mèo rượt theo tới đó luôn (real-time).
+  cardEl.addEventListener('pointerdown', (e)=>{
+    if(e.target === catEl || catEl.contains(e.target)) return;
+    gestureActive = true;
+    goTo(e.clientX, e.clientY, chaseSpeed);
+  });
+  cardEl.addEventListener('pointermove', (e)=>{
+    if(!gestureActive) return;
+    goTo(e.clientX, e.clientY, chaseSpeed);
+  });
+  window.addEventListener('pointerup', ()=>{ gestureActive = false; });
+  window.addEventListener('pointercancel', ()=>{ gestureActive = false; });
+
+  // Lúc đang ngồi yên, mèo vẫn quay đầu "nhìn thẳng" theo hướng con trỏ trên trang
   document.addEventListener('pointermove', (e)=>{
-    if(dragging) return;
-    setTargetFromClient(e.clientX, e.clientY);
+    if(mode !== 'idle' || !pos) return;
+    const rect = cardEl.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    if(Math.abs(px - pos.x) > 4){
+      flip = px < pos.x ? -1 : 1;
+      catEl.style.setProperty('--flip', flip);
+    }
   });
 
-  // Kéo - thả trực tiếp con mèo
+  // Kéo - thả trực tiếp con mèo, luôn được ưu tiên cao nhất
   catEl.addEventListener('pointerdown', (e)=>{
     if(!pos) return;
-    dragging = true;
+    mode = 'dragging';
     pointerId = e.pointerId;
     catEl.classList.add('dragging');
     catEl.classList.remove('walking');
     catEl.setPointerCapture(pointerId);
+    clearTimeout(wanderTimer);
+    e.stopPropagation();
     e.preventDefault();
   });
   catEl.addEventListener('pointermove', (e)=>{
-    if(!dragging) return;
+    if(mode !== 'dragging') return;
     const rect = cardEl.getBoundingClientRect();
     pos = clamp({ x: e.clientX - rect.left, y: e.clientY - rect.top });
     render();
   });
   function endDrag(){
-    if(!dragging) return;
-    dragging = false;
+    if(mode !== 'dragging') return;
+    mode = 'idle';
     catEl.classList.remove('dragging');
-    target = { ...pos }; // thả ra là đứng yên tại chỗ, tới khi con trỏ di chuyển tiếp mới đi tiếp
+    target = { ...pos }; // thả ra là ngồi yên tại chỗ, lát sau mới tự đi lang thang tiếp
+    scheduleWander();
   }
   catEl.addEventListener('pointerup', endDrag);
   catEl.addEventListener('pointercancel', endDrag);
@@ -1024,7 +1109,7 @@ requestAnimationFrame(()=>{
 (function initTilt(){
   const profileEl = document.getElementById('profile');
   const cardEl = document.getElementById('card');
-  const maxTilt = 16; // độ nghiêng tối đa — tăng số này nếu thấy còn YẾU, giảm nếu thấy còn MẠNH
+  const maxTilt = 18; // độ nghiêng tối đa — tăng số này nếu thấy còn YẾU, giảm nếu thấy còn MẠNH
   const ease = 0.10; // độ mượt: nhỏ hơn = mượt/chậm hơn
 
   let targetRotX = 0, targetRotY = 0, targetScale = 1;
