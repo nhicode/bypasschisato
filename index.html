@@ -221,11 +221,11 @@
     transform:scaleX(var(--flip, 1));
     transition:transform .15s ease;
   }
-  .deco-cat .cat-visual *{ fill:#fff; stroke:#2a1f45; stroke-width:1.3; stroke-linejoin:round; }
-  .deco-cat .cat-eye{ fill:#2a1f45; stroke:none; }
-  .deco-cat .cat-nose{ fill:#2a1f45; stroke:none; }
+  .deco-cat .cat-visual *{ fill:#fff; }
+  .deco-cat .cat-eye{ fill:#2a1f45; }
+  .deco-cat .cat-nose{ fill:#2a1f45; }
   .deco-cat .cat-tail{
-    fill:none; stroke:#fff; stroke-width:4; stroke-linecap:round; stroke-linejoin:round;
+    fill:none; stroke:#fff; stroke-width:4; stroke-linecap:square; stroke-linejoin:miter;
     animation:tailSwish 1.6s ease-in-out infinite;
   }
 
@@ -240,7 +240,7 @@
   .deco-cat .leg-b{ animation:legSwingB .36s steps(2) infinite; }
   .deco-cat.walking .cat-leg{ animation-play-state:running; }
   .deco-cat.dragging .cat-tail{ animation:none; }
-  .deco-cat .cat-eyes{ animation:catBlink 3.2s steps(1) infinite; transform-origin:center; }
+  .deco-cat .cat-eye{ transform-box:fill-box; transform-origin:center; animation:catBlink 3.2s steps(1) infinite; }
   @keyframes tailSwish{
     0%,100%{ transform:rotate(-8deg); }
     50%{ transform:rotate(10deg); }
@@ -485,31 +485,47 @@
     <div class="deco-star">✦</div>
     <div class="deco-cat" id="decoCat">
       <svg class="cat-visual" viewBox="0 0 64 46" xmlns="http://www.w3.org/2000/svg">
-        <!-- DÁNG NGỒI: nhìn thẳng vào màn hình, tai nhọn, đuôi cong vắt qua lưng, không lộ chân -->
+        <!-- DÁNG NGỒI: nhìn thẳng vào màn hình, ghép từ ô vuông (pixel), 2 chân trước duỗi lộ ra
+             dưới bụng (2 chân sau coi như thu dưới thân, giống mèo ngồi thật), đuôi cong vắt qua lưng -->
         <g class="pose-sit">
-          <path class="cat-tail" d="M44,33 Q59,25 46,8" style="transform-origin:44px 33px"></path>
-          <ellipse cx="32" cy="30" rx="15" ry="13"></ellipse>
-          <circle cx="32" cy="15" r="11"></circle>
-          <polygon points="23,9 27,-4 32,8"></polygon>
-          <polygon points="32,8 37,-4 41,9"></polygon>
-          <g class="cat-eyes">
-            <circle class="cat-eye" cx="27" cy="15" r="2.1"></circle>
-            <circle class="cat-eye" cx="37" cy="15" r="2.1"></circle>
-          </g>
-          <polygon class="cat-nose" points="30.3,19 33.7,19 32,21.3"></polygon>
+          <path class="cat-tail" d="M39,28 L46,28 L46,15 L38,15" style="transform-origin:39px 28px"></path>
+          <rect x="9"  y="0"  width="3"  height="3"/>
+          <rect x="27" y="0"  width="3"  height="3"/>
+          <rect x="6"  y="3"  width="9"  height="3"/>
+          <rect x="24" y="3"  width="9"  height="3"/>
+          <rect x="6"  y="6"  width="9"  height="3"/>
+          <rect x="24" y="6"  width="9"  height="3"/>
+          <rect x="9"  y="9"  width="6"  height="3"/>
+          <rect x="24" y="9"  width="6"  height="3"/>
+          <rect x="12" y="12" width="18" height="3"/>
+          <rect x="9"  y="15" width="24" height="3"/>
+          <rect x="9"  y="18" width="24" height="3"/>
+          <rect x="9"  y="21" width="24" height="3"/>
+          <rect x="6"  y="24" width="30" height="3"/>
+          <rect x="3"  y="27" width="36" height="3"/>
+          <rect x="3"  y="30" width="36" height="3"/>
+          <rect x="3"  y="33" width="36" height="3"/>
+          <rect x="6"  y="36" width="6"  height="3"/>
+          <rect x="30" y="36" width="6"  height="3"/>
+          <rect x="6"  y="39" width="6"  height="3"/>
+          <rect x="30" y="39" width="6"  height="3"/>
+          <rect class="cat-eye" x="13" y="18" width="3" height="3"></rect>
+          <rect class="cat-eye" x="26" y="18" width="3" height="3"></rect>
+          <rect class="cat-nose" x="19" y="22" width="4" height="2"></rect>
         </g>
 
-        <!-- DÁNG CHẠY: nhìn nghiêng theo hướng di chuyển, lộ chân sải bước, đuôi cong ra sau -->
+        <!-- DÁNG CHẠY: nhìn nghiêng theo hướng di chuyển, thân là 1 khối vuông liền nối
+             thẳng xuống các khối chân (không có khe hở), đuôi gấp khúc cong ra sau -->
         <g class="pose-walk">
-          <path class="cat-tail" d="M14,27 Q1,19 7,6" style="transform-origin:14px 27px"></path>
-          <g class="cat-leg leg-a" style="transform-origin:47px 34px"><rect x="45" y="34" width="4" height="10" rx="2"></rect></g>
-          <g class="cat-leg leg-a" style="transform-origin:19px 34px"><rect x="17" y="34" width="4" height="10" rx="2"></rect></g>
-          <g class="cat-leg leg-b" style="transform-origin:41px 34px"><rect x="39" y="34" width="4" height="10" rx="2"></rect></g>
-          <g class="cat-leg leg-b" style="transform-origin:25px 34px"><rect x="23" y="34" width="4" height="10" rx="2"></rect></g>
-          <ellipse cx="30" cy="26" rx="16" ry="10"></ellipse>
-          <circle cx="46" cy="16" r="9"></circle>
-          <polygon points="40,9 43,-1 47,8"></polygon>
-          <circle class="cat-eye" cx="48" cy="15" r="1.8"></circle>
+          <path class="cat-tail" d="M10,24 L2,24 L2,12 L7,12" style="transform-origin:10px 24px"></path>
+          <g class="cat-leg leg-a" style="transform-origin:39px 30px"><rect x="37" y="30" width="4" height="10" rx="0"></rect></g>
+          <g class="cat-leg leg-a" style="transform-origin:15px 30px"><rect x="13" y="30" width="4" height="10" rx="0"></rect></g>
+          <g class="cat-leg leg-b" style="transform-origin:33px 30px"><rect x="31" y="30" width="4" height="10" rx="0"></rect></g>
+          <g class="cat-leg leg-b" style="transform-origin:21px 30px"><rect x="19" y="30" width="4" height="10" rx="0"></rect></g>
+          <rect x="10" y="18" width="34" height="12"></rect>
+          <rect x="38" y="6" width="14" height="14"></rect>
+          <rect x="41" y="0" width="5" height="6"></rect>
+          <rect class="cat-eye" x="46" y="11" width="3" height="3"></rect>
         </g>
       </svg>
     </div>
