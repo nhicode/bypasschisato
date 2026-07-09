@@ -212,6 +212,15 @@
     z-index:6;
     transform:translate(-50%,-50%);
     filter:drop-shadow(0 0 4px rgba(255,255,255,.5));
+    /* Chặn menu bấm-giữ (Save Image/Chia sẻ/lookup...) và việc trình duyệt coi mèo
+       là ảnh có thể kéo/copy — để giữ giữ nguyên trải nghiệm kéo-thả của riêng mình */
+    -webkit-touch-callout:none;
+    -webkit-user-select:none;
+    -webkit-user-drag:none;
+    user-select:none;
+    -khtml-user-drag:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
   }
   .deco-cat.dragging{ cursor:grabbing; }
   .deco-cat .cat-visual{
@@ -221,6 +230,7 @@
     transform:scaleX(var(--flip, 1));
     transition:transform .15s ease;
   }
+  .deco-cat.walking .cat-visual{ transition:none; } /* lúc đi để JS tự điều khiển nghiêng người mượt hơn */
   .deco-cat .cat-visual *{ fill:#fff; }
   .deco-cat .cat-eye{ fill:#2a1f45; }
   .deco-cat .cat-nose{ fill:#2a1f45; }
@@ -229,29 +239,18 @@
     animation:tailSwish 1.6s ease-in-out infinite;
   }
 
-  /* Hai dáng KHÔNG BAO GIỜ hiện cùng lúc: đang đứng yên -> dáng ngồi nhìn thẳng (không lộ chân);
-     đang thật sự di chuyển -> dáng chạy nhìn nghiêng (lộ chân sải bước). */
+  /* Hai dáng KHÔNG BAO GIỜ hiện cùng lúc: đang đứng yên -> dáng ngồi nhìn thẳng (4 chân lộ đều);
+     đang thật sự di chuyển -> dáng chạy nhìn nghiêng (chân do JS điều khiển, không dùng CSS animation
+     vì animation-play-state kiểu cũ thỉnh thoảng bị trình duyệt "quên" chạy). */
   .deco-cat .pose-walk{ display:none; }
   .deco-cat.walking .pose-walk{ display:block; }
   .deco-cat.walking .pose-sit{ display:none; }
 
-  .deco-cat .cat-leg{ animation-play-state:paused; }
-  .deco-cat .leg-a{ animation:legSwingA .36s steps(2) infinite; }
-  .deco-cat .leg-b{ animation:legSwingB .36s steps(2) infinite; }
-  .deco-cat.walking .cat-leg{ animation-play-state:running; }
   .deco-cat.dragging .cat-tail{ animation:none; }
   .deco-cat .cat-eye{ transform-box:fill-box; transform-origin:center; animation:catBlink 3.2s steps(1) infinite; }
   @keyframes tailSwish{
     0%,100%{ transform:rotate(-8deg); }
     50%{ transform:rotate(10deg); }
-  }
-  @keyframes legSwingA{
-    0%,100%{ transform:rotate(26deg); }
-    50%{ transform:rotate(-26deg); }
-  }
-  @keyframes legSwingB{
-    0%,100%{ transform:rotate(-26deg); }
-    50%{ transform:rotate(26deg); }
   }
   @keyframes catBlink{
     0%, 92%, 100%{ transform:scaleY(1); }
@@ -485,37 +484,35 @@
     <div class="deco-star">✦</div>
     <div class="deco-cat" id="decoCat">
       <svg class="cat-visual" viewBox="0 0 64 46" xmlns="http://www.w3.org/2000/svg">
-        <!-- DÁNG NGỒI: nhìn thẳng vào màn hình, ghép từ ô vuông (pixel), 2 chân trước duỗi lộ ra
-             dưới bụng (2 chân sau coi như thu dưới thân, giống mèo ngồi thật), đuôi cong vắt qua lưng -->
+        <!-- DÁNG NGỒI: nhìn thẳng vào màn hình, tai tam giác pixel rõ (nhọn dần lên, không tròn
+             kiểu tai chuột), 4 chân dàn đều dưới bụng, đuôi cong vắt qua lưng -->
         <g class="pose-sit">
-          <path class="cat-tail" d="M39,28 L46,28 L46,15 L38,15" style="transform-origin:39px 28px"></path>
+          <path class="cat-tail" d="M39,25 L46,25 L46,12 L38,12" style="transform-origin:39px 25px"></path>
           <rect x="9"  y="0"  width="3"  height="3"/>
-          <rect x="27" y="0"  width="3"  height="3"/>
+          <rect x="30" y="0"  width="3"  height="3"/>
           <rect x="6"  y="3"  width="9"  height="3"/>
-          <rect x="24" y="3"  width="9"  height="3"/>
-          <rect x="6"  y="6"  width="9"  height="3"/>
-          <rect x="24" y="6"  width="9"  height="3"/>
-          <rect x="9"  y="9"  width="6"  height="3"/>
-          <rect x="24" y="9"  width="6"  height="3"/>
-          <rect x="12" y="12" width="18" height="3"/>
-          <rect x="9"  y="15" width="24" height="3"/>
-          <rect x="9"  y="18" width="24" height="3"/>
+          <rect x="27" y="3"  width="9"  height="3"/>
+          <rect x="3"  y="6"  width="15" height="3"/>
+          <rect x="24" y="6"  width="15" height="3"/>
+          <rect x="6"  y="9"  width="30" height="3"/>
+          <rect x="3"  y="12" width="36" height="3"/>
+          <rect x="3"  y="15" width="36" height="3"/>
+          <rect x="6"  y="18" width="30" height="3"/>
           <rect x="9"  y="21" width="24" height="3"/>
-          <rect x="6"  y="24" width="30" height="3"/>
-          <rect x="3"  y="27" width="36" height="3"/>
-          <rect x="3"  y="30" width="36" height="3"/>
-          <rect x="3"  y="33" width="36" height="3"/>
-          <rect x="6"  y="36" width="6"  height="3"/>
-          <rect x="30" y="36" width="6"  height="3"/>
-          <rect x="6"  y="39" width="6"  height="3"/>
-          <rect x="30" y="39" width="6"  height="3"/>
-          <rect class="cat-eye" x="13" y="18" width="3" height="3"></rect>
-          <rect class="cat-eye" x="26" y="18" width="3" height="3"></rect>
-          <rect class="cat-nose" x="19" y="22" width="4" height="2"></rect>
+          <rect x="3"  y="24" width="36" height="3"/>
+          <rect x="0"  y="27" width="42" height="3"/>
+          <rect x="0"  y="30" width="42" height="3"/>
+          <rect x="4"  y="33" width="4"  height="9"/>
+          <rect x="14" y="33" width="4"  height="9"/>
+          <rect x="24" y="33" width="4"  height="9"/>
+          <rect x="34" y="33" width="4"  height="9"/>
+          <rect class="cat-eye" x="11" y="13" width="3" height="3"></rect>
+          <rect class="cat-eye" x="27" y="13" width="3" height="3"></rect>
+          <rect class="cat-nose" x="19" y="19" width="4" height="2"></rect>
         </g>
 
-        <!-- DÁNG CHẠY: nhìn nghiêng theo hướng di chuyển, thân là 1 khối vuông liền nối
-             thẳng xuống các khối chân (không có khe hở), đuôi gấp khúc cong ra sau -->
+        <!-- DÁNG CHẠY: nhìn nghiêng theo hướng di chuyển, thân là khối liền nối thẳng xuống chân
+             (không khe hở), chân do JS xoay trực tiếp (không dùng CSS animation), đuôi cong ra sau -->
         <g class="pose-walk">
           <path class="cat-tail" d="M10,24 L2,24 L2,12 L7,12" style="transform-origin:10px 24px"></path>
           <g class="cat-leg leg-a" style="transform-origin:39px 30px"><rect x="37" y="30" width="4" height="10" rx="0"></rect></g>
@@ -524,7 +521,8 @@
           <g class="cat-leg leg-b" style="transform-origin:21px 30px"><rect x="19" y="30" width="4" height="10" rx="0"></rect></g>
           <rect x="10" y="18" width="34" height="12"></rect>
           <rect x="38" y="6" width="14" height="14"></rect>
-          <rect x="41" y="0" width="5" height="6"></rect>
+          <rect x="42" y="0" width="3" height="3"/>
+          <rect x="39" y="3" width="9" height="4"/>
           <rect class="cat-eye" x="46" y="11" width="3" height="3"></rect>
         </g>
       </svg>
@@ -948,10 +946,16 @@ function renderTechRow(containerId, codes){
 ============================================================ */
 function initCat(catEl){
   const cardEl = catEl.closest('.card');
+  const visualEl = catEl.querySelector('.cat-visual');
+  const legsA = catEl.querySelectorAll('.leg-a');
+  const legsB = catEl.querySelectorAll('.leg-b');
   const margin = 30;          // khoảng cách tối thiểu từ tâm mèo tới viền thẻ
   const wanderSpeed = 90;     // px/s khi tự đi lang thang
   const chaseSpeed = 160;     // px/s khi được "gọi" bằng chạm/vuốt
   const stopDist = 3;
+  const stepCycle = 0.30;     // 1 chu kỳ bước chân (giây) — chỉnh số này để đi nhanh/chậm dáng chân
+  const legSwingDeg = 28;     // biên độ xoay chân
+  const bodyLeanDeg = 5;      // mèo hơi nghiêng người theo nhịp bước cho tự nhiên, giống vật lý đi thật
 
   let pos = null, target = null;
   let flip = 1;
@@ -959,6 +963,7 @@ function initCat(catEl){
   let curSpeed = wanderSpeed;
   let lastNow = null;
   let lastPawTime = 0;
+  let walkClock = 0;          // đồng hồ riêng cho dáng đi, chỉ chạy khi đang walking -> chân luôn động đậy khi đi
   let wanderTimer = null;
   let pointerId = null;
   let gestureActive = false;  // đang nhấn+vuốt trên thẻ (không phải nhấn lên chính con mèo)
@@ -987,6 +992,26 @@ function initCat(catEl){
     paw.style.transform = `translate(-50%,-50%) scaleX(${flip})`;
     cardEl.appendChild(paw);
     setTimeout(()=> paw.remove(), 700);
+  }
+
+  // Chân + dáng người do JS trực tiếp xoay mỗi khung hình — không phụ thuộc CSS animation
+  // (animation-play-state kiểu cũ đôi lúc bị trình duyệt bỏ qua, gây ra hiện tượng "đi mà chân đứng im").
+  function animateWalkPose(dt){
+    walkClock += dt;
+    const phase = (walkClock % stepCycle) / stepCycle;      // 0..1
+    const swing = Math.sin(phase * Math.PI * 2);            // -1..1, mượt tự nhiên hơn kiểu giật cứng
+    const legA = swing * legSwingDeg;
+    const legB = -swing * legSwingDeg;
+    legsA.forEach(el => el.style.transform = `rotate(${legA}deg)`);
+    legsB.forEach(el => el.style.transform = `rotate(${legB}deg)`);
+    // người hơi tréo/nghiêng theo nhịp bước, giống vật lý đi tự nhiên thay vì trượt cứng đơ
+    const lean = swing * bodyLeanDeg;
+    visualEl.style.transform = `scaleX(${flip}) rotate(${lean * flip}deg)`;
+  }
+  function resetWalkPose(){
+    legsA.forEach(el => el.style.transform = '');
+    legsB.forEach(el => el.style.transform = '');
+    visualEl.style.transform = ''; // trả lại cho CSS (scaleX(var(--flip)) mượt khi đứng yên)
   }
 
   function scheduleWander(){
@@ -1035,10 +1060,12 @@ function initCat(catEl){
           if(Math.abs(dx) > 1) flip = dx < 0 ? -1 : 1;
           pos = clamp(pos);
           catEl.classList.add('walking');
+          animateWalkPose(dt);
           spawnPaw(now);
         } else {
           mode = 'idle';
           catEl.classList.remove('walking');
+          resetWalkPose();
           scheduleWander();
         }
         render();
@@ -1073,6 +1100,11 @@ function initCat(catEl){
     }
   });
 
+  // Chặn menu bấm-giữ / bảng chọn của trình duyệt (Save Image, Chia sẻ, Lookup...) khi
+  // người dùng nhấn giữ lên con mèo — để nhấn-giữ chỉ có nghĩa là "kéo-thả", không gì khác.
+  catEl.addEventListener('contextmenu', (e)=> e.preventDefault());
+  catEl.addEventListener('dragstart', (e)=> e.preventDefault());
+
   // Kéo - thả trực tiếp con mèo, luôn được ưu tiên cao nhất
   catEl.addEventListener('pointerdown', (e)=>{
     if(!pos) return;
@@ -1080,6 +1112,7 @@ function initCat(catEl){
     pointerId = e.pointerId;
     catEl.classList.add('dragging');
     catEl.classList.remove('walking');
+    resetWalkPose();
     catEl.setPointerCapture(pointerId);
     clearTimeout(wanderTimer);
     e.stopPropagation();
